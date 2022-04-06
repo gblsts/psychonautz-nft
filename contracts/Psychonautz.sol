@@ -23,7 +23,6 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     uint256 public mintPrice = 0.0666 ether;
 
     bool public metadataIsFrozen = false;
-    bool public revealed = false;
 
     mapping(NautzSalePhase => PresaleParams) public presaleParams;
     mapping(address => mapping(NautzSalePhase => uint256))
@@ -172,10 +171,6 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         metadataIsFrozen = true;
     }
 
-    function reveal() external onlyOwner {
-        revealed = true;
-    }
-
     function pause() external onlyOwner {
         _pause();
     }
@@ -254,11 +249,6 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         returns (string memory)
     {
         require(_exists(tokenId), "Invalid Token ID");
-
-        if (revealed == false) {
-            return notRevealedUri;
-        }
-
         return
             bytes(tokenBaseUri).length > 0
                 ? string(
