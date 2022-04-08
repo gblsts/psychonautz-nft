@@ -16,7 +16,6 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     string public PSYCHONAUTZ_PROVENANCE = "";
 
     string private tokenBaseUri;
-    string private notRevealedUri;
 
     uint256 public constant MAX_NAUTZ = 10000;
     uint256 public maxPurchasePerMint = 5;
@@ -127,13 +126,6 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     function setTokenBaseUri(string calldata _tokenBaseUri) external onlyOwner {
         require(!metadataIsFrozen, "Metadata is permanently frozen");
         tokenBaseUri = _tokenBaseUri;
-    }
-
-    function setNotRevealedURI(string calldata _notRevealedUri)
-        external
-        onlyOwner
-    {
-        notRevealedUri = _notRevealedUri;
     }
 
     function setMaxPurchasePerMint(uint256 _maxPurchasePerMint)

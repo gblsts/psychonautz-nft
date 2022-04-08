@@ -56,12 +56,6 @@ describe('Psychonautz NFT contract', () => {
 			);
 		});
 
-		it('setNotRevealedURI', async () => {
-			await expect(asNotOwner.setNotRevealedURI('NOT-REVEALED-URI')).to.be.revertedWith(
-				'Ownable: caller is not the owner'
-			);
-		});
-
 		it('setMaxPurchasePerMint', async () => {
 			await expect(asNotOwner.setMaxPurchasePerMint(5)).to.be.revertedWith(
 				'Ownable: caller is not the owner'
