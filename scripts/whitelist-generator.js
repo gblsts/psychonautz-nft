@@ -9,7 +9,7 @@ let whitelistAddresses = [
     '0x5B68B65a46F07506D1B01837D2C04F333Bf7b959',
     '0xFA0E09752067f35C0a66F37Aed7708C093f6700d',
     '0x9c478f97e791264815a8ACc9448438e4D45ef456'
-]
+];
 
 // leaves, merkleTree and rootHash are all determinated prior to claim. The project
 // would have some form of whitelist process where whitelisted addresses are collected
@@ -24,7 +24,7 @@ const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
 // Gets the root hash of the merkle tree in hex format.
 const rootHash = merkleTree.getRoot();
 console.log('Whitelist Merkle Tree\n', merkleTree.toString());
-console.log('Root Hash: ', rootHash)
+console.log('Root Hash: ', rootHash);
 
 // Client-side, you would use the 'msg.sender' address to query and API that returns
 // the merkle proof required to derive the root hash of the Merkle Tree.
