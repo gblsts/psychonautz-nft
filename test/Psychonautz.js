@@ -3,14 +3,15 @@ const { ethers } = require("hardhat");
 const chai = require('chai');
 const { solidity } = require('ethereum-waffle');
 const { expect } = require("chai");
+const { MerkleTree } = require('merkletreejs');
+const keccak256 = require('keccak256');
 
 chai.use(solidity);
 
-let psychonautz;
-
 describe('Psychonautz NFT contract', () => {
 	before(async () => {
-		[owner, artist, notOwner] = await ethers.getSigners();
+		[owner, artist, notOwner, buyer] = await ethers.getSigners();
+		
 		const Psychonautz = await ethers.getContractFactory("Psychonautz");
 		psychonautz = await Psychonautz.deploy(
 			[
@@ -22,6 +23,22 @@ describe('Psychonautz NFT contract', () => {
 				70
 			]
 		);
+
+		asNotOwner = psychonautz.connect(notOwner);
+		asBuyer = psychonautz.connect(buyer);
+		
+		whitelistAddresses = [
+			'0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8',
+			'0x29111c8F13d357D95eF5039b763c4BB59b4eD60D',
+			'0x832F166799A407275500430b61b622F0058f15d6',
+			'0x52Cbd5C420B5B1DC755e24ee33Eff376CD03f36a',
+			'0x5B68B65a46F07506D1B01837D2C04F333Bf7b959',
+			'0xFA0E09752067f35C0a66F37Aed7708C093f6700d',
+			'0x9c478f97e791264815a8ACc9448438e4D45ef456',
+			buyer.address
+		]
+		leafNodes = whitelistAddresses.map(addr => keccak256(addr));
+		merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
 	});
 
 	describe('Initialization', async () => {
@@ -39,11 +56,6 @@ describe('Psychonautz NFT contract', () => {
 	});
 
 	describe('Protected methods called by not owner address', async () => {
-
-		before(async () => {
-			asNotOwner = psychonautz.connect(notOwner);
-		});
-
 		it('setProvenanceHash', async () => {
 			await expect(asNotOwner.setProvenanceHash('PROVENANCE-HASH')).to.be.revertedWith(
 				'Ownable: caller is not the owner'
@@ -100,16 +112,34 @@ describe('Psychonautz NFT contract', () => {
 	});
 
 	describe('Set parameters', async () => {
-
-		before(async () => {
-			asOwner = psychonautz.connect(owner);
-		});
-
 		it('setProvenanceHash', async () => {
 			const provenanceHash = 'PROVENANCE-HASH';
-			await asOwner.setProvenanceHash(provenanceHash);
-			const settedProvenanceHash = await asOwner.PSYCHONAUTZ_PROVENANCE();
+			await psychonautz.setProvenanceHash(provenanceHash);
+			const settedProvenanceHash = await psychonautz.PSYCHONAUTZ_PROVENANCE();
 			expect(provenanceHash).to.eq(settedProvenanceHash);
+		});
+
+		it('Set phase Merkle root', async() => {
+			const rootHash = '0x' + merkleTree.getRoot().toString('hex')
+			await psychonautz.setPhaseMerkleRoot(1, rootHash);
+			const presaleParams = await psychonautz.presaleParams(1);
+			expect(rootHash).to.eq(presaleParams.merkleRoot);
+		});
+	});
+
+	describe('Minting process', async () => {
+		describe('Presale', async () => {
+			it('setCurrentPhase', async () => {
+				await psychonautz.setCurrentPhase(1);
+				const settedPhase = await psychonautz.currentPhase();
+				expect(1).to.eq(settedPhase);
+			});
+			
+			it('Presale', async() => {
+				const claimingAddress = keccak256(buyer.address);
+				const hexProof = merkleTree.getHexProof(claimingAddress);
+				await asBuyer.mintPresale(1, hexProof, 1);
+			});
 		});
 	});
 });
