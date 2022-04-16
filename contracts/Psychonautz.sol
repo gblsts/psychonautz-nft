@@ -26,7 +26,7 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     string private tokenBaseUri;
 
     uint256 public constant MAX_NAUTZ = 10000;
-    uint256 public maxPurchasePerMint = 5;
+    uint256 public maxPurchasePerMint;
     uint256 public mintPrice = 0.0666 ether;
 
     bool public metadataIsFrozen = false;
