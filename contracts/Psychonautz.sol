@@ -21,7 +21,7 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
 
     uint256[] payeesShares = [5, 45, 50];
 
-    string public PSYCHONAUTZ_PROVENANCE = "";
+    string public PSYCHONAUTZ_PROVENANCE;
 
     string private tokenBaseUri;
 
@@ -29,7 +29,7 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     uint256 public maxPurchasePerMint;
     uint256 public mintPrice = 0.0666 ether;
 
-    bool public metadataIsFrozen = false;
+    bool public metadataIsFrozen;
 
     mapping(NautzSalePhase => PresaleParams) public presaleParams;
     mapping(address => mapping(NautzSalePhase => uint256))
@@ -75,33 +75,29 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         ERC721(TOKEN_NAME, TOKEN_SYMBOL)
         PaymentSplitter(payees, payeesShares)
     {
-        presaleParams[NautzSalePhase.Free] = PresaleParams({
-            name: "Free",
-            mintPrice: 0 ether,
-            limitPerAddress: 1,
-            merkleRoot: ""
-        });
+        PresaleParams memory freePhase;
+        freePhase.name = "Free";
+        freePhase.mintPrice = 0 ether;
+        freePhase.limitPerAddress = 1;
+        presaleParams[NautzSalePhase.Free] = freePhase;
 
-        presaleParams[NautzSalePhase.TeamSale] = PresaleParams({
-            name: "Team sale",
-            mintPrice: 0 ether,
-            limitPerAddress: 20,
-            merkleRoot: ""
-        });
+        PresaleParams memory teamPhase;
+        teamPhase.name = "Team sale";
+        teamPhase.mintPrice = 0 ether;
+        teamPhase.limitPerAddress = 20;
+        presaleParams[NautzSalePhase.TeamSale] = teamPhase;
 
-        presaleParams[NautzSalePhase.EarlySale] = PresaleParams({
-            name: "Early sale",
-            mintPrice: 0.0333 ether,
-            limitPerAddress: 5,
-            merkleRoot: ""
-        });
+        PresaleParams memory earlyPhase;
+        earlyPhase.name = "Early sale";
+        earlyPhase.mintPrice = 0.0333 ether;
+        earlyPhase.limitPerAddress = 5;
+        presaleParams[NautzSalePhase.EarlySale] = earlyPhase;
 
-        presaleParams[NautzSalePhase.OgSale] = PresaleParams({
-            name: "OG sale",
-            mintPrice: 0.0333 ether,
-            limitPerAddress: 10,
-            merkleRoot: ""
-        });
+        PresaleParams memory ogPhase;
+        ogPhase.name = "OG sale";
+        ogPhase.mintPrice = 0.0333 ether;
+        ogPhase.limitPerAddress = 10;
+        presaleParams[NautzSalePhase.OgSale] = ogPhase;
     }
 
     modifier atPhase(NautzSalePhase _phase, string memory _phaseName) {
