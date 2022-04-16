@@ -13,6 +13,14 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     string public constant TOKEN_NAME = "Psychonautz";
     string public constant TOKEN_SYMBOL = "PSYCHO";
 
+    address[] payees = [
+        0x304c32337E15a34D1c4ccdF39B4381e500f2Fe82,
+        0x37CCFA2a5ca94423d550c52671a4162aBbdbF39E,
+        0xEA13d3e5B1c9b4F626a69C9b79D90EdD571F907c
+    ];
+
+    uint256[] payeesShares = [5, 45, 50];
+
     string public PSYCHONAUTZ_PROVENANCE = "";
 
     string private tokenBaseUri;
@@ -45,9 +53,9 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         bytes32 merkleRoot;
     }
 
-    constructor(address[] memory payees, uint256[] memory shares)
+    constructor()
         ERC721(TOKEN_NAME, TOKEN_SYMBOL)
-        PaymentSplitter(payees, shares)
+        PaymentSplitter(payees, payeesShares)
     {
         presaleParams[NautzSalePhase.Free] = PresaleParams({
             name: "Free",

@@ -2,9 +2,7 @@ const { ethers } = require("hardhat");
 
 async function main() {
     const Psychonautz = await ethers.getContractFactory("Psychonautz");
-    const payees = [ '<payee1>' ];
-    const shares = [ 100 ];
-    const psychonautz = await Psychonautz.deploy(payees, shares);
+    const psychonautz = await Psychonautz.deploy();
     console.log("Psychonautz deployed to:", psychonautz.address);
 }
 
