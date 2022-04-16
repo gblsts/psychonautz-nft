@@ -13,16 +13,7 @@ describe('Psychonautz NFT contract', () => {
 		[owner, artist, notOwner, buyer] = await ethers.getSigners();
 		
 		const Psychonautz = await ethers.getContractFactory("Psychonautz");
-		psychonautz = await Psychonautz.deploy(
-			[
-				owner.address,
-				artist.address
-			],
-			[
-				30,
-				70
-			]
-		);
+		psychonautz = await Psychonautz.deploy();
 
 		asNotOwner = psychonautz.connect(notOwner);
 		asBuyer = psychonautz.connect(buyer);
@@ -117,6 +108,13 @@ describe('Psychonautz NFT contract', () => {
 			await psychonautz.setProvenanceHash(provenanceHash);
 			const settedProvenanceHash = await psychonautz.PSYCHONAUTZ_PROVENANCE();
 			expect(provenanceHash).to.eq(settedProvenanceHash);
+		});
+
+		it('setMaxPurchasePerMint', async () => {
+			const maxPurchasePerMint = 5;
+			await psychonautz.setMaxPurchasePerMint(maxPurchasePerMint);
+			const settedMaxPurchasePerMint = await psychonautz.maxPurchasePerMint();
+			expect(maxPurchasePerMint).to.eq(settedMaxPurchasePerMint);
 		});
 
 		it('Set phase Merkle root', async() => {
