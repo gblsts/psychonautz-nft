@@ -53,6 +53,24 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         bytes32 merkleRoot;
     }
 
+    event TokenUriBaseSet(string _tokenBaseUri);
+
+    event MaxPurchasePerMintSet(uint256 _maxPurchasePerMint);
+
+    event ProvenanceHashSet(string _provenanceHash);
+
+    event PhaseParamsSet(
+        uint256 _phase,
+        uint256 _mintPrice,
+        uint256 _limitPerAddress
+    );
+
+    event PhaseMerkleRootSet(uint256 _phase, bytes32 _merkleRoot);
+
+    event CurrentPhaseSet(uint256 _phase);
+
+    event MetadataFrozen(address account);
+
     constructor()
         ERC721(TOKEN_NAME, TOKEN_SYMBOL)
         PaymentSplitter(payees, payeesShares)
@@ -124,16 +142,18 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         _;
     }
 
-    function setProvenanceHash(string calldata provenanceHash)
+    function setProvenanceHash(string calldata _provenanceHash)
         external
         onlyOwner
     {
-        PSYCHONAUTZ_PROVENANCE = provenanceHash;
+        PSYCHONAUTZ_PROVENANCE = _provenanceHash;
+        emit ProvenanceHashSet(_provenanceHash);
     }
 
     function setTokenBaseUri(string calldata _tokenBaseUri) external onlyOwner {
         require(!metadataIsFrozen, "Metadata is permanently frozen");
         tokenBaseUri = _tokenBaseUri;
+        emit TokenUriBaseSet(_tokenBaseUri);
     }
 
     function setMaxPurchasePerMint(uint256 _maxPurchasePerMint)
@@ -141,6 +161,7 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         onlyOwner
     {
         maxPurchasePerMint = _maxPurchasePerMint;
+        emit MaxPurchasePerMintSet(_maxPurchasePerMint);
     }
 
     function setPhaseParams(
@@ -151,6 +172,7 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         NautzSalePhase phaseToUpdate = NautzSalePhase(_phase);
         presaleParams[phaseToUpdate].mintPrice = _mintPrice;
         presaleParams[phaseToUpdate].limitPerAddress = _limitPerAddress;
+        emit PhaseParamsSet(_phase, _mintPrice, _limitPerAddress);
     }
 
     function setPhaseMerkleRoot(uint256 _phase, bytes32 _merkleRoot)
@@ -159,16 +181,19 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     {
         NautzSalePhase phaseToUpdate = NautzSalePhase(_phase);
         presaleParams[phaseToUpdate].merkleRoot = _merkleRoot;
+        emit PhaseMerkleRootSet(_phase, _merkleRoot);
     }
 
     function setCurrentPhase(uint256 _phase) external onlyOwner {
         currentPhase = NautzSalePhase(_phase);
+        emit CurrentPhaseSet(_phase);
     }
 
     function freezeMetadata() external onlyOwner {
         require(!metadataIsFrozen, "Metadata is already frozen");
         require(bytes(tokenBaseUri).length > 0, "Token base URI is not setted");
         metadataIsFrozen = true;
+        emit MetadataFrozen(msg.sender);
     }
 
     function pause() external onlyOwner {
