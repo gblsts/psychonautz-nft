@@ -38,12 +38,12 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     NautzSalePhase public currentPhase = NautzSalePhase.Locked;
 
     enum NautzSalePhase {
-        Locked,
-        Free,
-        TeamSale,
-        EarlySale,
-        OgSale,
-        PublicSale
+        Locked,     //0
+        Free,       //1
+        TeamSale,   //2
+        OgSale,     //3
+        EarlySale,  //4
+        PublicSale  //5
     }
 
     struct PresaleParams {
@@ -87,17 +87,17 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         teamPhase.limitPerAddress = 20;
         presaleParams[NautzSalePhase.TeamSale] = teamPhase;
 
-        PresaleParams memory earlyPhase;
-        earlyPhase.name = "Early sale";
-        earlyPhase.mintPrice = 0.0333 ether;
-        earlyPhase.limitPerAddress = 5;
-        presaleParams[NautzSalePhase.EarlySale] = earlyPhase;
-
         PresaleParams memory ogPhase;
         ogPhase.name = "OG sale";
         ogPhase.mintPrice = 0.0333 ether;
         ogPhase.limitPerAddress = 10;
         presaleParams[NautzSalePhase.OgSale] = ogPhase;
+
+        PresaleParams memory earlyPhase;
+        earlyPhase.name = "Early sale";
+        earlyPhase.mintPrice = 0.0333 ether;
+        earlyPhase.limitPerAddress = 5;
+        presaleParams[NautzSalePhase.EarlySale] = earlyPhase;
     }
 
     modifier atPhase(NautzSalePhase _phase, string memory _phaseName) {
