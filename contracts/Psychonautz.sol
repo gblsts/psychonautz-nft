@@ -171,6 +171,16 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         _unpause();
     }
 
+    function isAllowListEligible(
+        uint256 _phase,
+        address _addr,
+        bytes32[] calldata _merkleProof
+    ) external view returns (bool) {
+        bytes32 leaf = keccak256(abi.encodePacked(_addr));
+        bytes32 merkleRoot = presaleParams[NautzSalePhase(_phase)].merkleRoot;
+        return MerkleProof.verify(_merkleProof, merkleRoot, leaf);
+    }
+
     function mintPresale(
         uint256 _phase,
         bytes32[] calldata _merkleProof,

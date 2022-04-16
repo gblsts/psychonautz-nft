@@ -134,8 +134,15 @@ describe('Psychonautz NFT contract', () => {
 				const settedPhase = await psychonautz.currentPhase();
 				expect(1).to.eq(settedPhase);
 			});
+
+			it('Is allow list eligible', async() => {
+				const claimingAddress = buyer.address;
+				const hexProof = merkleTree.getHexProof(keccak256(claimingAddress));
+				const allowed = await asBuyer.isAllowListEligible(1, buyer.address, hexProof);
+				expect(allowed).to.be.true;
+			});
 			
-			it('Presale', async() => {
+			it('Presale mint', async() => {
 				const claimingAddress = keccak256(buyer.address);
 				const hexProof = merkleTree.getHexProof(claimingAddress);
 				await asBuyer.mintPresale(1, hexProof, 1);
