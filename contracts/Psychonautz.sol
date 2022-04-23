@@ -10,26 +10,24 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     using Strings for uint256;
 
-    string public constant TOKEN_NAME = "Psychonautz";
+    string public constant TOKEN_NAME = "PsychonautzNFT";
     string public constant TOKEN_SYMBOL = "PSYCHO";
 
     address[] payees = [
-        0x304c32337E15a34D1c4ccdF39B4381e500f2Fe82,
-        0x37CCFA2a5ca94423d550c52671a4162aBbdbF39E,
-        0xEA13d3e5B1c9b4F626a69C9b79D90EdD571F907c
+        0x0d0F15B7FF1F02EDBAF333A0176440cF73A887F0
     ];
 
-    uint256[] payeesShares = [5, 45, 50];
+    uint256[] payeesShares = [100];
 
     string public PSYCHONAUTZ_PROVENANCE;
 
     string private tokenBaseUri;
 
-    uint256 public constant MAX_NAUTZ = 10000;
-    uint256 public maxPurchasePerMint;
+    uint256 public constant MAX_NAUTZ = 9999;
+    uint256 public maxPurchasePerMint = 20;
     uint256 public mintPrice = 0.0666 ether;
 
-    bool public metadataIsFrozen;
+    bool public freeEnabled;
 
     mapping(NautzSalePhase => PresaleParams) public presaleParams;
     mapping(address => mapping(NautzSalePhase => uint256))
@@ -69,7 +67,7 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
 
     event CurrentPhaseSet(uint256 _phase);
 
-    event MetadataFrozen(address account);
+    event FreeEnabledStatus(address account, bool freeEnabled);
 
     constructor()
         ERC721(TOKEN_NAME, TOKEN_SYMBOL)
@@ -84,20 +82,24 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         PresaleParams memory teamPhase;
         teamPhase.name = "Team sale";
         teamPhase.mintPrice = 0 ether;
-        teamPhase.limitPerAddress = 20;
+        teamPhase.limitPerAddress = 50;
         presaleParams[NautzSalePhase.TeamSale] = teamPhase;
 
         PresaleParams memory ogPhase;
         ogPhase.name = "OG sale";
-        ogPhase.mintPrice = 0.0333 ether;
-        ogPhase.limitPerAddress = 10;
+        ogPhase.mintPrice = 0.0555 ether;
+        ogPhase.limitPerAddress = 20;
         presaleParams[NautzSalePhase.OgSale] = ogPhase;
 
         PresaleParams memory earlyPhase;
         earlyPhase.name = "Early sale";
-        earlyPhase.mintPrice = 0.0333 ether;
-        earlyPhase.limitPerAddress = 5;
+        earlyPhase.mintPrice = 0.0555 ether;
+        earlyPhase.limitPerAddress = 20;
         presaleParams[NautzSalePhase.EarlySale] = earlyPhase;
+
+        for (uint256 i = 1; i <= 120; i++) {
+            _safeMint(msg.sender, totalSupply() + 1);
+        }
     }
 
     modifier atPhase(NautzSalePhase _phase, string memory _phaseName) {
@@ -120,7 +122,16 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         require(
             _numberOfTokens + addressToMints[msg.sender][currentPhase] <=
                 presaleParams[currentPhase].limitPerAddress,
-            "Exceeds number of presale mints allowed for current phase"
+            "Exceeds number of allowed presale mints for current phase"
+        );
+        _;
+    }
+
+    modifier validateFreeMintsAllowed() {
+        require(freeEnabled, "Free phase is not enabled");
+        require(
+            addressToMints[msg.sender][NautzSalePhase.Free] == 0,
+            "Exceeds number of allowed free mints"
         );
         _;
     }
@@ -147,7 +158,6 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
     }
 
     function setTokenBaseUri(string calldata _tokenBaseUri) external onlyOwner {
-        require(!metadataIsFrozen, "Metadata is permanently frozen");
         tokenBaseUri = _tokenBaseUri;
         emit TokenUriBaseSet(_tokenBaseUri);
     }
@@ -185,11 +195,9 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         emit CurrentPhaseSet(_phase);
     }
 
-    function freezeMetadata() external onlyOwner {
-        require(!metadataIsFrozen, "Metadata is already frozen");
-        require(bytes(tokenBaseUri).length > 0, "Token base URI is not setted");
-        metadataIsFrozen = true;
-        emit MetadataFrozen(msg.sender);
+    function setFreeEnabled(bool _freeEnabled) external onlyOwner {
+        freeEnabled = _freeEnabled;
+        emit FreeEnabledStatus(msg.sender, _freeEnabled);
     }
 
     function pause() external onlyOwner {
@@ -208,6 +216,23 @@ contract Psychonautz is ERC721Enumerable, Pausable, Ownable, PaymentSplitter {
         bytes32 leaf = keccak256(abi.encodePacked(_addr));
         bytes32 merkleRoot = presaleParams[NautzSalePhase(_phase)].merkleRoot;
         return MerkleProof.verify(_merkleProof, merkleRoot, leaf);
+    }
+
+    function mintFree(bytes32[] calldata _merkleProof)
+        external
+        payable
+        whenNotPaused
+        validateFreeMintsAllowed
+        ensureAvailabilityFor(1)
+    {
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        bytes32 merkleRoot = presaleParams[NautzSalePhase.Free].merkleRoot;
+        require(
+            MerkleProof.verify(_merkleProof, merkleRoot, leaf),
+            "Invalid proof"
+        );
+        addressToMints[msg.sender][NautzSalePhase.Free] += 1;
+        _safeMint(msg.sender, totalSupply() + 1);
     }
 
     function mintPresale(

@@ -83,12 +83,6 @@ describe('Psychonautz NFT contract', () => {
 			);
 		});
 
-		it('freezeMetadata', async () => {
-			await expect(asNotOwner.freezeMetadata()).to.be.revertedWith(
-				'Ownable: caller is not the owner'
-			);
-		});
-
 		it('pause', async () => {
 			await expect(asNotOwner.pause()).to.be.revertedWith(
 				'Ownable: caller is not the owner'
@@ -119,8 +113,8 @@ describe('Psychonautz NFT contract', () => {
 
 		it('Set phase Merkle root', async() => {
 			const rootHash = '0x' + merkleTree.getRoot().toString('hex')
-			await psychonautz.setPhaseMerkleRoot(1, rootHash);
-			const presaleParams = await psychonautz.presaleParams(1);
+			await psychonautz.setPhaseMerkleRoot(3, rootHash);
+			const presaleParams = await psychonautz.presaleParams(3);
 			expect(rootHash).to.eq(presaleParams.merkleRoot);
 		});
 	});
@@ -128,23 +122,41 @@ describe('Psychonautz NFT contract', () => {
 	describe('Minting process', async () => {
 		describe('Presale', async () => {
 			it('setCurrentPhase', async () => {
-				await psychonautz.setCurrentPhase(1);
+				await psychonautz.setCurrentPhase(3);
 				const settedPhase = await psychonautz.currentPhase();
-				expect(1).to.eq(settedPhase);
+				expect(3).to.eq(settedPhase);
 			});
 
 			it('Is allow list eligible', async() => {
 				const claimingAddress = buyer.address;
 				const hexProof = merkleTree.getHexProof(keccak256(claimingAddress));
-				const allowed = await asBuyer.isAllowListEligible(1, buyer.address, hexProof);
+				const allowed = await asBuyer.isAllowListEligible(3, buyer.address, hexProof);
 				expect(allowed).to.be.true;
 			});
 			
 			it('Presale mint', async() => {
+				const overrides = {
+					value: ethers.utils.parseEther("0.0555"),
+				}
+
 				const claimingAddress = keccak256(buyer.address);
 				const hexProof = merkleTree.getHexProof(claimingAddress);
-				await asBuyer.mintPresale(1, hexProof, 1);
+				await asBuyer.mintPresale(3, hexProof, 1, overrides);
 			});
+		});
+	});
+
+	describe('Administrative tasks', async () => {
+		it('Release funds', async () => {
+			await psychonautz['release(address)']('0x0d0F15B7FF1F02EDBAF333A0176440cF73A887F0');
+			const released = await psychonautz['released(address)']('0x0d0F15B7FF1F02EDBAF333A0176440cF73A887F0');
+			expect(ethers.utils.formatEther(released)).to.eq('0.0555');
+		});
+		
+		it('Transfer ownership', async () => {
+			await psychonautz.transferOwnership(notOwner.address);
+			const newOwner = await psychonautz.owner();
+			expect(newOwner).to.eq(notOwner.address);
 		});
 	});
 });
